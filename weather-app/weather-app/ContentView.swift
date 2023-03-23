@@ -5,20 +5,28 @@
 //  Created by Jonathan Bigbee on 3/22/23.
 //
 
+
 import SwiftUI
 
 struct ContentView: View {
     @State private var input: String = ""
+    
+    @ObservedObject var weatherViewModel = WeatherViewModel()
+    
     var body: some View {
         VStack {
-          TextField("Enter City", text: $input)
-                .font(.title)
+            TextField("Enter city", text: $input, onEditingChanged: { (_) in
+            }) {
+                if !self.input.isEmpty {
+                    self.weatherViewModel.fetch(city: self.input)
+                }
+            }
+            .font(.title)
             
             Divider()
             
-            Text(input)
+            Text("\(weatherViewModel.weatherInfo)")
                 .font(.body)
-            
         }.padding()
     }
 }
