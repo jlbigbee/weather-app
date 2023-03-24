@@ -12,6 +12,18 @@ private enum API {
 }
 
 final class OpenWeatherMapController: WebServiceController {
+    
+    
+    let fallbackService: WebServiceController?
+    
+    init(fallbackService: WebServiceController? = nil) {
+        self.fallbackService = fallbackService
+    }
+    
+    
+    
+ 
+    
     func fetchWeatherData(for city: String,
                           completionHandler: @escaping (String?, WebServiceControllerError?) -> Void) {
         let endpoint = "https://api.openweathermap.org/data/2.5/find?q=\(city)&units=imperial&appid=\(API.key)"
@@ -25,11 +37,19 @@ final class OpenWeatherMapController: WebServiceController {
         
         let dataTask = URLSession.shared.dataTask(with: endpointURL, completionHandler: { (data, response, error) -> Void in
             guard error == nil else {
-                completionHandler(nil, WebServiceControllerError.forwarded(error!))
+                if let fallback = self.fallbackService {
+                    fallback.fetchWeatherData(for: city, completionHandler: completionHandler)
+                } else {
+                    completionHandler(nil, WebServiceControllerError.forwarded(error!))
+                }
                 return
             }
             guard let responseData = data else {
-                completionHandler(nil, WebServiceControllerError.invalidPayload(endpointURL))
+                if let fallback = self.fallbackService {
+                    fallback.fetchWeatherData(for: city, completionHandler: completionHandler)
+                } else {
+                    completionHandler(nil, WebServiceControllerError.invalidPayload(endpointURL))
+                }
                 return
             }
 
